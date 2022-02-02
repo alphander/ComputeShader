@@ -51,8 +51,6 @@ int CreateComputeShader(ID3D11Device* device, ID3D11DeviceContext* context, ID3D
 	hr = device->CreateComputeShader(csBlob->GetBufferPointer(), csBlob->GetBufferSize(), nullptr, &computeShader);
 	if (FAILED(hr)) return -1;
 
-	context->CSSetShader(computeShader, nullptr, 0);
-
 	csBlob->Release();
 
 	*shader = computeShader;
@@ -92,6 +90,31 @@ int CreateConstants(ID3D11Device* device, ID3D11Buffer** inBuffer, Constant* c)
 
 	D3D11_BUFFER_DESC cbDesc;
 	cbDesc.ByteWidth = sizeof(Constant);
+	cbDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = 0;
+	cbDesc.MiscFlags = 0;
+	cbDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA InitData;
+	InitData.pSysMem = c;
+	InitData.SysMemPitch = 0;
+	InitData.SysMemSlicePitch = 0;
+
+	HRESULT hr = device->CreateBuffer(&cbDesc, &InitData, &buffer);
+	if (FAILED(hr)) return -1;
+
+	*inBuffer = buffer;
+
+	return 0;
+}
+
+int CreateDynamicConstants(ID3D11Device* device, ID3D11Buffer** inBuffer, DynamicConstant* c)
+{
+	ID3D11Buffer* buffer = nullptr;
+
+	D3D11_BUFFER_DESC cbDesc;
+	cbDesc.ByteWidth = sizeof(DynamicConstant);
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -192,7 +215,7 @@ int CreateTexture(ID3D11Device* device, ID3D11Texture3D** inTexture, ID3D11Unord
 	return 0;
 }
 
-int CreateAccess(ID3D11Device* device, ID3D11Buffer* inBuffer, int size, int count)
+int CreateAccess(ID3D11Device* device, ID3D11Buffer** inBuffer, int size, int count)
 {
 	ID3D11Buffer* buffer = nullptr;
 
@@ -208,12 +231,12 @@ int CreateAccess(ID3D11Device* device, ID3D11Buffer* inBuffer, int size, int cou
 	HRESULT hr = device->CreateBuffer(&descBuffer, 0, &buffer);
 	if (FAILED(hr)) return -1;
 
-	inBuffer = buffer;
+	*inBuffer = buffer;
 
 	return 0;
 }
 
-void UpdateConstants(ID3D11DeviceContext* context, ID3D11Buffer* buffer, Constant* data)
+void UpdateDynamicConstants(ID3D11DeviceContext* context, ID3D11Buffer* buffer, DynamicConstant* data)
 {
 	D3D11_MAPPED_SUBRESOURCE map;
 	ZeroMemory(&map, sizeof(D3D11_MAPPED_SUBRESOURCE));

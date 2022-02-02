@@ -16,14 +16,25 @@ namespace DX = DirectX;
 
 struct Constant
 {
-	int width = 1, length = 1, height = 1;
-	int area = 1;
-	float viscosity = 0.01f;
+	int width, length, height;
+	int area;
+};
+
+struct DynamicConstant
+{
+	float dt;
+	float viscosity;
 	int step;
+
+	float padding1;
 };
 
 struct Data
 {
-	float pressure;
 	DX::XMFLOAT3 velocity;
+	float pressure;
+	float divergence;
+	float density;
+
+	float padding1, padding2;
 };

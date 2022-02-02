@@ -1,40 +1,43 @@
 #include "Resources.hlsli"
-
-RWStructuredBuffer<Data> Input : register(u0);
-RWStructuredBuffer<Data> Output : register(u1);
-
-uint get(uint3 id)
-{
-    return id.x + id.y * length + id.z * area;
-}
+#define diffuse(a, b, c, d, e, f, g) (a + k * ((b + c + d + e + f + g) / 6)) / (1.0 + k);
 
 [numthreads(8, 8, 8)]
 void CSMain(uint3 id : SV_DispatchThreadID)
-{   
-    if ((id.x + id.z + id.y) % step == 0) return;
-    
-    float k = viscosity;
-    
-    uint2 o = uint2(1, 0);
+{
     uint current = get(id);
-    uint xp1 = get(id + o.xyy);
-    uint xm1 = get(id - o.xyy);
-    uint yp1 = get(id + o.yxy);
-    uint ym1 = get(id - o.yxy);
-    uint zp1 = get(id + o.yyx);
-    uint zm1 = get(id - o.yyx);
+    if ((id.x + id.z + id.y) % step == 0)
+    {
+        Output[current] = Input[current];
+        return;
+    }
     
-    float a = Input[current].pressure;
-    float b = Input[xp1].pressure;
-    float c = Input[xm1].pressure;
-    float d = Input[yp1].pressure;
-    float e = Input[ym1].pressure;
-    float f = Input[zp1].pressure;
-    float g = Input[zm1].pressure;
+    float k = viscosity * dt;
     
-    float s = (b + c + d + e + f + g) / 6;
-    
-    float value = (a + k * s) / (1.0 + k);
-    
-    Output[current].pressure = value;
+    uint2 w = uint2(1, 0);
+    uint xp1 = get(id + w.xyy);
+    uint xm1 = get(id - w.xyy);
+    uint yp1 = get(id + w.yxy);
+    uint ym1 = get(id - w.yxy);
+    uint zp1 = get(id + w.yyx);
+    uint zm1 = get(id - w.yyx);
+    {
+        float a = Input[current].density;
+        float b = Input[xp1].density;
+        float c = Input[xm1].density;
+        float d = Input[yp1].density;
+        float e = Input[ym1].density;
+        float f = Input[zp1].density;
+        float g = Input[zm1].density;
+        Output[current].density = diffuse(a, b, c, d, e, f, g);
+    }
+    {
+        float3 a = Input[current].velocity;
+        float3 b = Input[xp1].velocity;
+        float3 c = Input[xm1].velocity;
+        float3 d = Input[yp1].velocity;
+        float3 e = Input[ym1].velocity;
+        float3 f = Input[zp1].velocity;
+        float3 g = Input[zm1].velocity;
+        Output[current].velocity = diffuse(a, b, c, d, e, f, g);
+    }
 }
