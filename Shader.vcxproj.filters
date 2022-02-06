@@ -31,12 +31,18 @@
     <ClCompile Include="Helper.cpp">
       <Filter>Files</Filter>
     </ClCompile>
+    <ClCompile Include="VTKHelper.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resources.h">
       <Filter>Files\Headers</Filter>
     </ClInclude>
     <ClInclude Include="Helper.h">
+      <Filter>Files\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="VTKHelper.h">
       <Filter>Files\Headers</Filter>
     </ClInclude>
   </ItemGroup>

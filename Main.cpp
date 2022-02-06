@@ -1,11 +1,12 @@
 #include "Helper.h"
+#include "VTKHelper.h"
 #include <time.h>
 
 const int width = 64, length = 64, height = 64;
 const int threadX = 8, threadY = 8, threadZ = 8;
 const int diffusionGaussSeidelIters = 100;
 const int pressureGaussSeidelIters = 100;
-const int simulationSteps = 100;
+const int simulationSteps = 3;
 
 char entry[] = "CSMain";
 
@@ -21,7 +22,7 @@ int main()
     const int count = width * length * height;
     const int volume = count * size;
     float viscosity = 0.1f;
-    float dt = 0.1f;
+    float dt = 0.01f;
 
     Data* initInput = new Data[volume];
     Data* initOutput = new Data[volume];
@@ -32,7 +33,7 @@ int main()
         initInput[i].divergence = 0.0f;
         initInput[i].pressure = 0.0f;
     }
-    initInput[32].velocity = DX::XMFLOAT3(10.0f, 20.0f, 1.0f);
+    initInput[32].velocity = DX::XMFLOAT3(10.0f, 2000.0f, 100.0f);
     initInput[32].density = 512.0f;
 
     Constant constant;
@@ -129,7 +130,7 @@ int main()
         context->CSSetUnorderedAccessViews(0, 2, flip % 2 == 0 ? views1 : views2, 0);
         context->Dispatch(x, y, z);
         flip++;
-
+        cout << "Step: " << i << std::endl;
     }
     //End-----------------------------------
 
@@ -138,16 +139,11 @@ int main()
     D3D11_MAPPED_SUBRESOURCE map;
     HRESULT hr = context->Map(cpuBuffer, 0, D3D11_MAP_READ, 0, &map);
 
-    if (SUCCEEDED(hr))
-    {
-        const auto values = reinterpret_cast<const Data*>(map.pData);
-        for (int i = 0; i < count; i++)
-        {
-            float c = values[i].density;
-            cout << c << endl;
-        }
-        context->Unmap(cpuBuffer, 0);
-    }
+    const Data* outputData = reinterpret_cast<const Data*>(map.pData);
+
+    context->Unmap(cpuBuffer, 0);
+
+    vtk(width, length, height, count, outputData);
 
     inputBuffer->Release();
     outputBuffer->Release();
