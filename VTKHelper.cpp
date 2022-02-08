@@ -26,7 +26,12 @@ void vtk(int x, int y, int z, unsigned int size, const Data* data)
         file << i << " ";
     file << std::endl;
 
-    file << "POINT_DATA " << x * y * z << std::endl;
+    file << "POINT_DATA " << size << std::endl;
+    file << "SCALARS density float" << std::endl;
+    file << "LOOKUP_TABLE default" << std::endl;
+    for (int i = 0; i < size; i++)
+        file << data[i].density << std::endl;
+
     file << "VECTORS velocity float" << std::endl;
     for (int i = 0; i < size; i++)
     {
@@ -35,11 +40,6 @@ void vtk(int x, int y, int z, unsigned int size, const Data* data)
         file << data[i].velocity.z << " ";
         file << std::endl;
     }
-    file << "SCALERS density float" << std::endl;
-    file << "LOOKUP_TABLE default" << std::endl;
-
-    for (int i = 0; i < size; i++)
-        file << data[i].density << std::endl;
 
     file.close();
 }

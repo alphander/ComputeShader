@@ -2,11 +2,11 @@
 #include "VTKHelper.h"
 #include <time.h>
 
-const int width = 64, length = 64, height = 64;
+const int width = 128, length = 128, height = 128;
 const int threadX = 8, threadY = 8, threadZ = 8;
 const int diffusionGaussSeidelIters = 100;
 const int pressureGaussSeidelIters = 100;
-const int simulationSteps = 3;
+const int simulationSteps = 100;
 
 char entry[] = "CSMain";
 
@@ -22,10 +22,9 @@ int main()
     const int count = width * length * height;
     const int volume = count * size;
     float viscosity = 0.1f;
-    float dt = 0.01f;
+    float dt = 0.001f;
 
     Data* initInput = new Data[volume];
-    Data* initOutput = new Data[volume];
     for (int i = 0; i < volume; i++)
     {
         initInput[i].velocity = DX::XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -35,6 +34,8 @@ int main()
     }
     initInput[32].velocity = DX::XMFLOAT3(10.0f, 2000.0f, 100.0f);
     initInput[32].density = 512.0f;
+
+    Data* initOutput = 0;
 
     Constant constant;
     constant.width = width;
@@ -59,7 +60,6 @@ int main()
     ID3D11Buffer* dynamicConstantBuffer = nullptr;
     ID3D11Buffer* inputBuffer = nullptr;
     ID3D11Buffer* outputBuffer = nullptr;
-    ID3D11Buffer* cpuBuffer = nullptr;
 
     ID3D11UnorderedAccessView* inputView = nullptr;
     ID3D11UnorderedAccessView* outputView = nullptr;
@@ -75,8 +75,8 @@ int main()
     CreateDynamicConstants(device, &dynamicConstantBuffer, &dynamicConstant);
 
     CreateBuffer(device, &inputBuffer, &inputView, size, count, initInput);
+    delete[] initInput;
     CreateBuffer(device, &outputBuffer, &outputView, size, count, initOutput);
-    CreateAccess(device, &cpuBuffer, size, count);
 
     ID3D11Buffer* constantBuffers[2] = { constantBuffer, dynamicConstantBuffer };
 
@@ -133,6 +133,9 @@ int main()
         cout << "Step: " << i << std::endl;
     }
     //End-----------------------------------
+
+    ID3D11Buffer* cpuBuffer = nullptr;
+    CreateAccess(device, &cpuBuffer, size, count);
 
     context->CopyResource(cpuBuffer, outputBuffer);
 
