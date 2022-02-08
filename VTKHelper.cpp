@@ -1,10 +1,11 @@
 #include "Resources.h"
 #include <fstream>
 
-void vtk(int x, int y, int z, unsigned int size, const Data* data)
+void vtk(int x, int y, int z, unsigned int size, const Data* data, const char* filename)
 {
     std::ofstream file;
-    file.open("D:/Desktop/VTKs/test01.vtk", std::ios::out | std::ios::app | std::ios::binary);
+    std::remove(filename);
+    file.open(filename, std::ios::out | std::ios::app | std::ios::binary);
     file.clear();
 
     file << "# vtk DataFile Version 2.0" << std::endl

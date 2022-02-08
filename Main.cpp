@@ -2,13 +2,14 @@
 #include "VTKHelper.h"
 #include <time.h>
 
-const int width = 128, length = 128, height = 128;
+const int width = 64, length = 64, height = 64;
 const int threadX = 8, threadY = 8, threadZ = 8;
 const int diffusionGaussSeidelIters = 100;
 const int pressureGaussSeidelIters = 100;
 const int simulationSteps = 100;
 
 char entry[] = "CSMain";
+const char saveDirectory[] = "D:/Desktop/VTKs/test01.vtk";
 
 LPCWSTR diffusion = L"Diffusion.hlsl";
 LPCWSTR advection = L"Advection.hlsl";
@@ -24,18 +25,16 @@ int main()
     float viscosity = 0.1f;
     float dt = 0.001f;
 
-    Data* initInput = new Data[volume];
+    Data* init = new Data[volume];
     for (int i = 0; i < volume; i++)
     {
-        initInput[i].velocity = DX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-        initInput[i].density = 0.0f;
-        initInput[i].divergence = 0.0f;
-        initInput[i].pressure = 0.0f;
+        init[i].velocity = DX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+        init[i].density = 0.0f;
+        init[i].divergence = 0.0f;
+        init[i].pressure = 0.0f;
     }
-    initInput[32].velocity = DX::XMFLOAT3(10.0f, 2000.0f, 100.0f);
-    initInput[32].density = 512.0f;
-
-    Data* initOutput = 0;
+    init[32].velocity = DX::XMFLOAT3(10.0f, 2000.0f, 100.0f);
+    init[32].density = 512.0f;
 
     Constant constant;
     constant.width = width;
@@ -74,9 +73,9 @@ int main()
     CreateConstants(device, &constantBuffer, &constant);
     CreateDynamicConstants(device, &dynamicConstantBuffer, &dynamicConstant);
 
-    CreateBuffer(device, &inputBuffer, &inputView, size, count, initInput);
-    delete[] initInput;
-    CreateBuffer(device, &outputBuffer, &outputView, size, count, initOutput);
+    CreateBuffer(device, &inputBuffer, &inputView, size, count, init);
+    CreateBuffer(device, &outputBuffer, &outputView, size, count, init);
+    delete[] init;
 
     ID3D11Buffer* constantBuffers[2] = { constantBuffer, dynamicConstantBuffer };
 
@@ -146,7 +145,7 @@ int main()
 
     context->Unmap(cpuBuffer, 0);
 
-    vtk(width, length, height, count, outputData);
+    vtk(width, length, height, count, outputData, saveDirectory);
 
     inputBuffer->Release();
     outputBuffer->Release();
