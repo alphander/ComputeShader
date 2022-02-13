@@ -236,6 +236,23 @@ int CreateAccess(ID3D11Device* device, ID3D11Buffer** inBuffer, int size, int co
 	return 0;
 }
 
+void DispatchComputeShader(unsigned int threadX, unsigned int threadY, unsigned int threadZ, ID3D11Device* device, ID3D11DeviceContext* context)
+{
+	ID3D11Query* query;
+	D3D11_QUERY_DESC desc;
+	desc.MiscFlags = 0;
+	desc.Query = D3D11_QUERY_EVENT;
+
+	device->CreateQuery(&desc, &query);
+	context->Begin(query);
+	context->Dispatch(threadX, threadY, threadZ);
+	context->End(query);
+	UINT32 queryData;
+	while (context->GetData(query, &queryData, sizeof(UINT32), 0) != S_OK)
+	{
+	}
+}
+
 void UpdateDynamicConstants(ID3D11DeviceContext* context, ID3D11Buffer* buffer, DynamicConstant* data)
 {
 	D3D11_MAPPED_SUBRESOURCE map;

@@ -13,12 +13,12 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     uint zp1 = get(id + w.yyx);
     uint zm1 = get(id - w.yyx);
     
-    float a = Input[xp1].divergence;
-    float b = Input[xm1].divergence;
-    float c = Input[yp1].divergence;
-    float d = Input[ym1].divergence;
-    float e = Input[zp1].divergence;
-    float f = Input[zm1].divergence;
+    float3 a = Input[xp1].velocity;
+    float3 b = Input[xm1].velocity;
+    float3 c = Input[yp1].velocity;
+    float3 d = Input[ym1].velocity;
+    float3 e = Input[zp1].velocity;
+    float3 f = Input[zm1].velocity;
     
-    Output[current].divergence = ((a - b) + (c - d) + (e - f)) / 3.0;
+    Output[current].divergence = ((a.x - b.x) + (c.y - d.y) + (e.z - f.z)) / 3.0;
 }

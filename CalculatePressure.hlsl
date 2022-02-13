@@ -26,5 +26,5 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float e = Input[zp1].pressure;
     float f = Input[zm1].pressure;
     
-    Output[current].pressure = ((a + b + c + d + e + f) - Input[current].divergence) / 6.0;
+    Output[current].pressure = (((a + b + c + d + e + f) - Input[current].divergence)) / 6.0;
 }

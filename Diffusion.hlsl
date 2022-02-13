@@ -11,7 +11,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         return;
     }
     
-    float k = viscosity * dt;
+    float k = viscosity;
     
     uint2 w = uint2(1, 0);
     uint xp1 = get(id + w.xyy);

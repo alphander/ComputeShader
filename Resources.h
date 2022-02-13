@@ -12,6 +12,7 @@
 
 using std::cout;
 using std::endl;
+
 namespace DX = DirectX;
 
 struct Constant
