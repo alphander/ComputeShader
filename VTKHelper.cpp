@@ -1,58 +1,113 @@
 #include "Resources.h"
 #include <fstream>
 #include <string>
-#include <array>
-#include "intrin.h"
 
 using std::string;
-using std::array;
 using std::to_string;
 using std::ios;
 
-void vtk(const int x, const int y, const int z, unsigned int size, const Data* data, const char* filename, int count)
+char* Swap(float in)
 {
-    cout << "Writing to file..." << endl;
+    float t = 0.0f;
+    char* from = (char*)&in;
+    char* to = (char*) &t;
+
+    to[0] = from[3];
+    to[1] = from[2];
+    to[2] = from[1];
+    to[3] = from[0];
+
+    return to;
+}
+
+void vtkAscii(const int x, const int y, const int z, unsigned int size, const Data* data, const char* filename, int count)
+{
     string str = filename + to_string(count) + ".vtk";
     std::ofstream file(str, ios::binary);
 
-    file << "# vtk DataFile Version 2.0" << endl;
-    file << "Fluid data" << endl;
+    file << "# vtk DataFile Version 2.0\n";
+    file << "Fluid data\n";
 
-    file << "ASCII" << endl;
-    file << "DATASET RECTILINEAR_GRID" << endl;
-    file << "DIMENSIONS " << x << " " << y << " " << z << endl;
+    file << "ASCII\n";
+    file << "DATASET RECTILINEAR_GRID\n";
+    file << "DIMENSIONS " << x << " " << y << " " << z << "\n";
 
-    file << "X_COORDINATES " << x << " float" << endl;
+    file << "X_COORDINATES " << x << " float\n";
     for (float i = 1; i <= x; i++)
         file << i << " ";
-    file << endl;
+    file << "\n";
 
-    file << "Y_COORDINATES " << y << " float" << endl;
+    file << "Y_COORDINATES " << y << " float\n";
     for (float i = 1; i <= y; i++)
         file << i << " ";
-    file << endl;
+    file << "\n";
 
-    file << "Z_COORDINATES " << z << " float" << endl;
+    file << "Z_COORDINATES " << z << " float\n";
     for (float i = 1; i <= z; i++)
         file << i << " ";
-    file << endl;
+    file << "\n";
 
-    file << "POINT_DATA " << size << endl;
-    file << "SCALARS density float" << endl;
-    file << "LOOKUP_TABLE default" << endl;
+    file << "POINT_DATA " << size << "\n";
+    file << "SCALARS density float\n";
+    file << "LOOKUP_TABLE default\n";
 
     for (int i = 0; i < size; i++)
-        file << data[i].density << endl;
+        file << data[i].density << "\n";
 
-    file << "VECTORS velocity float" << endl;
+    file << "VECTORS velocity float\n";
 
     for (int i = 0; i < size; i++)
     {
         file << data[i].velocity.x << " ";
         file << data[i].velocity.y << " ";
-        file << data[i].velocity.z << " ";
+        file << data[i].velocity.z << "\n";
     }
-    cout << "Finished Writing to file!" << endl;
+
+    file.close();
+}
+
+void vtkBinary(const int x, const int y, const int z, unsigned int size, const Data* data, const char* filename, int count)
+{
+    string str = filename + to_string(count) + ".vtk";
+    std::ofstream file(str, ios::binary);
+
+    file << "# vtk DataFile Version 2.0\n";
+    file << "Fluid data\n";
+
+    file << "ASCII\n";
+    file << "DATASET RECTILINEAR_GRID\n";
+    file << "DIMENSIONS " << x << " " << y << " " << z << "\n";
+
+    file << "X_COORDINATES " << x << " float\n";
+    for (float i = 1; i <= x; i++)
+        file.write(Swap(i), sizeof(float));
+    file << "\n";
+
+    file << "Y_COORDINATES " << y << " float\n";
+    for (float i = 1; i <= y; i++)
+        file.write(Swap(i), sizeof(float));
+    file << "\n";
+
+    file << "Z_COORDINATES " << z << " float\n";
+    for (float i = 1; i <= z; i++)
+        file.write(Swap(i), sizeof(float));
+    file << "\n";
+
+    file << "POINT_DATA " << size << "\n";
+    file << "SCALARS density float\n";
+    file << "LOOKUP_TABLE default\n";
+    for (int i = 0; i < size; i++)
+        file.write(Swap(data[i].density), sizeof(float));
+    file << "\n";
+
+    file << "VECTORS velocity float\n";
+    for (int i = 0; i < size; i++)
+    {
+        file.write(Swap(data[i].velocity.x), sizeof(float));
+        file.write(Swap(data[i].velocity.y), sizeof(float));
+        file.write(Swap(data[i].velocity.z), sizeof(float));
+    }
+    file << "\n";
 
     file.close();
 }

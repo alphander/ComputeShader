@@ -1,12 +1,12 @@
 #include "Helper.h"
 #include "VTKHelper.h"
-#include <time.h>
+#include <thread>
 
 const int width = 64, length = 64, height = 64;
 const int threadX = 8, threadY = 8, threadZ = 8;
-const int diffusionGaussSeidelIters = 64;
-const int pressureGaussSeidelIters = 64;
-const int simulationSteps = 64;
+const int diffusionIters = 64;
+const int pressureIters = 64;
+const int simSteps = 64;
 
 const int fileSaveInterval = 64;
 
@@ -64,12 +64,14 @@ int main()
 
     ID3D11Buffer* constantBuffer = nullptr;
     ID3D11Buffer* dynamicConstantBuffer = nullptr;
-    ID3D11Buffer* inputBuffer = nullptr;
-    ID3D11Buffer* outputBuffer = nullptr;
+    ID3D11Buffer* aBuffer = nullptr;
+    ID3D11Buffer* bBuffer = nullptr;
+    ID3D11Buffer* cBuffer = nullptr;
     ID3D11Buffer* cpuBuffer = nullptr;
 
-    ID3D11UnorderedAccessView* inputView = nullptr;
-    ID3D11UnorderedAccessView* outputView = nullptr;
+    ID3D11UnorderedAccessView* aView = nullptr;
+    ID3D11UnorderedAccessView* bView = nullptr;
+    ID3D11UnorderedAccessView* cView = nullptr;
 
     CreateDevice(&device, &context);
     CreateComputeShader(device, context, &diffusionShader, diffusion, entry);
@@ -81,8 +83,9 @@ int main()
     CreateConstants(device, &constantBuffer, &constant);
     CreateDynamicConstants(device, &dynamicConstantBuffer, &dynamicConstant);
 
-    CreateBuffer(device, &inputBuffer, &inputView, size, count, init);
-    CreateBuffer(device, &outputBuffer, &outputView, size, count, init);
+    CreateBuffer(device, &aBuffer, &aView, size, count, init);
+    CreateBuffer(device, &bBuffer, &bView, size, count, init);
+    CreateBuffer(device, &cBuffer, &cView, size, count, init);
     delete[] init;
     CreateAccess(device, &cpuBuffer, size, count);
 
@@ -90,8 +93,10 @@ int main()
 
     context->CSSetConstantBuffers(0, 2, constantBuffers);
 
-    ID3D11UnorderedAccessView* views1[2] = { inputView, outputView };
-    ID3D11UnorderedAccessView* views2[2] = { outputView, inputView };
+    ID3D11UnorderedAccessView* viewsAB[2] = {aView, bView};
+    ID3D11UnorderedAccessView* viewsBA[2] = {bView, aView};
+
+    ID3D11UnorderedAccessView** pairs[2] = {viewsAB, viewsBA};
 
     float dx = (float)width, dy = (float)length, dz = (float)height;
     float tx = (float)threadX, ty = (float)threadY, tz = (float)threadZ;
@@ -100,46 +105,47 @@ int main()
     cout << "Running Shader..." << endl;
 
     //Run-------------------------
-    int flip = 0;
-    for (int i = 0; i < simulationSteps; i++)
+    int side = 0;
+    int pair = 0;
+    for (int i = 0; i < simSteps; i++)
     {
         context->CSSetShader(diffusionShader, nullptr, 0);
-        for (int j = 0; j < diffusionGaussSeidelIters; j++)
+        for (int j = 0; j < diffusionIters; j++)
         {
             UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
-            context->CSSetUnorderedAccessViews(0, 2, flip % 2 == 0 ? views1 : views2, 0);
+            context->CSSetUnorderedAccessViews(0, 2, pairs[side % 2], 0);
             context->Dispatch(x, y, z);
             dynamicConstant.step++;
-            flip++;
+            side++;
         }
 
         context->CSSetShader(advectionShader, nullptr, 0);
         UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
-        context->CSSetUnorderedAccessViews(0, 2, flip % 2 == 0 ? views1 : views2, 0);
+        context->CSSetUnorderedAccessViews(0, 2, pairs[side % 2], 0);
         context->Dispatch(x, y, z);
-        flip++;
+        side++;
 
         context->CSSetShader(calculateDivergenceShader, nullptr, 0);
         UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
-        context->CSSetUnorderedAccessViews(0, 2, flip % 2 == 0 ? views1 : views2, 0);
+        context->CSSetUnorderedAccessViews(0, 2, pairs[side % 2], 0);
         context->Dispatch(x, y, z);
-        flip++;
+        side++;
 
         context->CSSetShader(calculatePressureShader, nullptr, 0);
-        for (int j = 0; j < pressureGaussSeidelIters; j++)
+        for (int j = 0; j < pressureIters; j++)
         {
             UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
-            context->CSSetUnorderedAccessViews(0, 2, flip % 2 == 0 ? views1 : views2, 0);
+            context->CSSetUnorderedAccessViews(0, 2, pairs[side % 2], 0);
             context->Dispatch(x, y, z);
             dynamicConstant.step++;
-            flip++;
+            side++;
         }
 
         context->CSSetShader(clearDivergenceShader, nullptr, 0);
         UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
-        context->CSSetUnorderedAccessViews(0, 2, flip % 2 == 0 ? views1 : views2, 0);
+        context->CSSetUnorderedAccessViews(0, 2, pairs[side % 2], 0);
         context->Dispatch(x, y, z);
-        flip++;
+        side++;
 
         cout << "Step: " << i << endl;
 
@@ -147,31 +153,32 @@ int main()
             continue;
 
         cout << "Accessing results..." << endl;
-
-        context->CopyResource(cpuBuffer, outputBuffer);
+        context->CopyResource(cpuBuffer, cBuffer);
 
         D3D11_MAPPED_SUBRESOURCE map;
         HRESULT hr = context->Map(cpuBuffer, 0, D3D11_MAP_READ, 0, &map);
-
         const Data* outputData = reinterpret_cast<const Data*>(map.pData);
-
         context->Unmap(cpuBuffer, 0);
 
         cout << "Finished accessing results!" << endl;
 
-        vtk(width, length, height, count, outputData, saveDirectory, i / fileSaveInterval);
+        cout << "Writing to file..." << endl;
 
+        vtkBinary(width, length, height, count, outputData, saveDirectory, i / fileSaveInterval);
+        cout << "Finished Writing to file!" << endl;
+
+        cout << "Finished running shader!" << endl;
+
+        
     }
-
-    cout << "Finished running shader!" << endl;
 
     //End-----------------------------------
 
-    inputBuffer->Release();
-    outputBuffer->Release();
+    aBuffer->Release();
+    bBuffer->Release();
     cpuBuffer->Release();
-    outputView->Release();
-    inputView->Release();
+    aView->Release();
+    bView->Release();
     constantBuffer->Release();
     dynamicConstantBuffer->Release();
     context->Release();
