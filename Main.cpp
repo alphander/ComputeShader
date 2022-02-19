@@ -3,7 +3,7 @@
 #include <future>
 
 const int width = 64, length = 64, height = 64;
-const int threadX = 4, threadY = 4, threadZ = 4;
+const int threadX = 8, threadY = 8, threadZ = 8;
 const int diffusionIters = 32;
 const int pressureIters = 32;
 const int simSteps = 16384;
@@ -53,7 +53,6 @@ int main()
 	dynamicConstant.dt = dt;
 	dynamicConstant.viscosity = viscosity * dt;
 	dynamicConstant.step = 0;
-	dynamicConstant.side = 0;
 
 	ID3D11Device* device = nullptr;
 	ID3D11DeviceContext* context = nullptr;
@@ -94,11 +93,19 @@ int main()
 
 	context->CSSetConstantBuffers(0, 2, constantBuffers);
 
-	ID3D11UnorderedAccessView* viewsAB[2] = {aView, bView};
-	ID3D11UnorderedAccessView* viewsBC[2] = {bView, cView};
-	ID3D11UnorderedAccessView* viewsCA[2] = {cView, aView};
+	ID3D11UnorderedAccessView* viewsAB[2] = { aView, bView };
+	ID3D11UnorderedAccessView* viewsBA[2] = { bView, aView };
+	ID3D11UnorderedAccessView* viewsBC[2] = { bView, cView };
+	ID3D11UnorderedAccessView* viewsCB[2] = { cView, bView };
+	ID3D11UnorderedAccessView* viewsCA[2] = { cView, aView };
+	ID3D11UnorderedAccessView* viewsAC[2] = { aView, cView };
 
-	ID3D11UnorderedAccessView** pairs[3] = {viewsAB, viewsBC, viewsCA};
+	ID3D11UnorderedAccessView** pairs1[2] = { viewsAB, viewsBA };
+	ID3D11UnorderedAccessView** pairs2[2] = { viewsBC, viewsCB };
+	ID3D11UnorderedAccessView** pairs3[2] = { viewsCA, viewsAC };
+
+	ID3D11UnorderedAccessView*** pairs[3] = {pairs1, pairs2, pairs3};
+
 	ID3D11Buffer* buffers[3] = {aBuffer, bBuffer, cBuffer};
 
 	float dx = (float)width, dy = (float)length, dz = (float)height;
@@ -114,7 +121,6 @@ int main()
 	int saveId = 0;
 	int saveOk = 0;
 	std::future<void> thread;
-	context->CSSetUnorderedAccessViews(0, 2, pairs[0], 0);
 
 	for (int i = 0; i < simSteps; i++)
 	{
@@ -122,41 +128,39 @@ int main()
 		for (int j = 0; j < diffusionIters; j++)
 		{
 			UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
+			context->CSSetUnorderedAccessViews(0, 2, pairs[saves % 3][side % 2], 0);
 			context->Dispatch(x, y, z);
+			dynamicConstant.step++;
 			side++;
-			step++;
-			dynamicConstant.side = side;
-			dynamicConstant.step = step;
 		}
 
 		context->CSSetShader(advectionShader, nullptr, 0);
+		context->CSSetUnorderedAccessViews(0, 2, pairs[saves % 3][side % 2], 0);
 		UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
 		context->Dispatch(x, y, z);
 		side++;
-		dynamicConstant.side = side;
 
 		context->CSSetShader(calculateDivergenceShader, nullptr, 0);
+		context->CSSetUnorderedAccessViews(0, 2, pairs[saves % 3][side % 2], 0);
 		UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
 		context->Dispatch(x, y, z);
 		side++;
-		dynamicConstant.side = side;
 
 		context->CSSetShader(calculatePressureShader, nullptr, 0);
 		for (int j = 0; j < pressureIters; j++)
 		{
+			context->CSSetUnorderedAccessViews(0, 2, pairs[saves % 3][side % 2], 0);
 			UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
 			context->Dispatch(x, y, z);
+			dynamicConstant.step++;
 			side++;
-			step++;
-			dynamicConstant.side = side;
-			dynamicConstant.step = step;
 		}
 
 		context->CSSetShader(clearDivergenceShader, nullptr, 0);
+		context->CSSetUnorderedAccessViews(0, 2, pairs[saves % 3][side % 2], 0);
 		UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
 		context->Dispatch(x, y, z);
 		side++;
-		dynamicConstant.side = side;
 
 		cout << "Step: " << i << endl;
 
@@ -189,7 +193,6 @@ int main()
 			saves++;
 			saveId++;
 			saveOk = 0;
-			context->CSSetUnorderedAccessViews(0, 2, pairs[saves % 3], 0);
 		}
 		saveOk++;
 	}

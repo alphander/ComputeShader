@@ -26,7 +26,7 @@ struct DynamicConstant
 	float dt;
 	float viscosity;
 	int step;
-	float side;
+	int padding1;
 };
 
 struct Data
@@ -36,5 +36,5 @@ struct Data
 	float divergence;
 	float density;
 
-	float padding1, padding2;
+	int padding1, padding2;
 };
