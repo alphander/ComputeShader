@@ -4,14 +4,14 @@
 
 const int width = 64, length = 64, height = 64;
 const int threadX = 8, threadY = 8, threadZ = 8;
-const int diffusionIters = 32;
-const int pressureIters = 32;
-const int simSteps = 16384;
+const int diffusionIters = 128;
+const int pressureIters = 128;
+const int simSteps = 25000;
 
-const int fileSaveInterval = 1024;
+const int fileSaveInterval = 250;
 
 char entry[] = "CSMain";
-const char saveDirectory[] = "D:/Desktop/VTKs/data";
+const char saveDirectory[] = "VTKs/data";
 
 LPCWSTR diffusion = L"Diffusion.hlsl";
 LPCWSTR advection = L"Advection.hlsl";
@@ -22,26 +22,78 @@ LPCWSTR clearDivergence = L"ClearDivergence.hlsl";
 const int count = width * length * height;
 const int size = sizeof(Data);
 const int volume = count * size;
-const float viscosity = 0.5f;
-const float dt = 0.002f;
+const float nu = 0.16f;
+const float kappa = 0.16f;
+const float dt = 0.0005f;
+const float rho = 1.0f;
+const float dx = 1.0f, dy = 1.0f, dz = 1.0f;
 
-int main()
+Data* createData()
 {
+	//Creating volume
 	Data* init = new Data[volume];
+
+	//Initializing volume
 	for (int i = 0; i < volume; i++)
 	{
+		init[i].type = 0;
 		init[i].velocity = DX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-		init[i].density = 0.0f;
+		init[i].concentration = 0.0f;
 		init[i].divergence = 0.0f;
 		init[i].pressure = 0.0f;
 	}
-	int k = 16 + 32 * length + 32 * length * height;
-	init[k].density = 1000.0f;
-	init[k].velocity = DX::XMFLOAT3(128.0f, 0, 0);
 
-	int l = 48 + 32 * length + 32 * length * height;
-	init[l].density = 1000.0f;
-	init[l].velocity = DX::XMFLOAT3(-128.0f, 0, 0);
+	//Initializing initial velocities
+	/*int a = 16 + 32 * length + 32 * length * height;
+	init[a].concentration = 100.0f;
+	init[a].velocity = DX::XMFLOAT3(1.0f, 0, 0);
+
+	int b = 48 + 32 * length + 32 * length * height;
+	init[b].concentration = 100.0f;
+	init[b].velocity = DX::XMFLOAT3(-1.0f, 0, 0);*/
+
+	//Adding boundary
+	for (int i = 0; i < length; i++)
+		for (int j = 0; j < height; j++)
+			for (int k = 0; k < width; k++)
+			{
+				if (!(i == 0 || j == 0 || k == 0 || i == 63 || j == 63 || k == 63)) continue;
+
+				int coord = i + j * length + k * length * height;
+
+				init[coord].type = 1;
+			}
+
+	//Adding box
+	/*for (int i = 0; i < length; i++)
+		for (int j = 0; j < height; j++)
+			for (int k = 0; k < width; k++)
+			{
+				if (!(i >= 16 && j >= 0 && k >= 16 && i < 48 && j < 63 && k < 48)) continue;
+
+				int coord = i + j * length + k * length * height;
+
+				init[coord].type = 1;
+			}*/
+
+	//Adding sliding top
+	for (int i = 0; i < length; i++)
+		for (int j = 0; j < height; j++)
+			for (int k = 0; k < width; k++)
+			{
+				if (!(k == 63)) continue;
+
+				int coord = i + j * length + k * length * height;
+
+				init[coord].velocity = DX::XMFLOAT3(1.0, 0.0, 0.0);
+			}
+
+	return init;
+}
+
+int main()
+{
+	Data* init = createData();
 
 	Constant constant;
 	constant.width = width;
@@ -51,7 +103,12 @@ int main()
 
 	DynamicConstant dynamicConstant;
 	dynamicConstant.dt = dt;
-	dynamicConstant.viscosity = viscosity * dt;
+	dynamicConstant.nu_dt = nu * dt;
+	dynamicConstant.kappa_dt = kappa * dt;
+	dynamicConstant.dt_rho = dt / rho;
+	dynamicConstant.dx = dx;
+	dynamicConstant.dy = dy;
+	dynamicConstant.dz = dz;
 	dynamicConstant.step = 0;
 
 	ID3D11Device* device = nullptr;

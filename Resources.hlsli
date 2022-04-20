@@ -9,20 +9,22 @@ cbuffer Constant : register(b0)
 cbuffer DynamicConstant : register(b1)
 {
     float dt;
-    float viscosity;
+    float nu_dt;
+    float kappa_dt;
+    float dt_rho;
+    float dx, dy, dz;
     int step;
-    
-    int padding1;
 };
 
 struct Data
 {
+    int type;
     float3 velocity;
     float pressure;
     float divergence;
-    float density;
+    float concentration;
     
-    int padding1, padding2;
+    int padding1;
 };
 
 RWStructuredBuffer<Data> Input : register(u0);

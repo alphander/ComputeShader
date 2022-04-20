@@ -1,5 +1,5 @@
 #include "Resources.hlsli"
-#define diffuse(a, b, c, d, e, f, g) (a + k * ((b + c + d + e + f + g) / 6)) / (1.0 + k);
+#define diffuse(a, b, c, d, e, f, g, k) (a + k * (b + c + d + e + f + g)) / (1.0 + 6.0 * k);
 
 [numthreads(8, 8, 8)]
 void CSMain(uint3 id : SV_DispatchThreadID)
@@ -11,7 +11,11 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         return;
     }
     
-    float k = viscosity;
+    if (Input[current].type)
+    {
+        Output[current] = Input[current];
+        return;
+    }
     
     uint2 w = uint2(1, 0);
     uint xp1 = get(id + w.xyy);
@@ -21,14 +25,14 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     uint zp1 = get(id + w.yyx);
     uint zm1 = get(id - w.yyx);
     {
-        float a = Input[current].density;
-        float b = Input[xp1].density;
-        float c = Input[xm1].density;
-        float d = Input[yp1].density;
-        float e = Input[ym1].density;
-        float f = Input[zp1].density;
-        float g = Input[zm1].density;
-        Output[current].density = diffuse(a, b, c, d, e, f, g);
+        float a = Input[current].concentration;
+        float b = Input[xp1].concentration;
+        float c = Input[xm1].concentration;
+        float d = Input[yp1].concentration;
+        float e = Input[ym1].concentration;
+        float f = Input[zp1].concentration;
+        float g = Input[zm1].concentration;
+        Output[current].concentration = diffuse(a, b, c, d, e, f, g, kappa_dt);
     }
     {
         float3 a = Input[current].velocity;
@@ -38,6 +42,6 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         float3 e = Input[ym1].velocity;
         float3 f = Input[zp1].velocity;
         float3 g = Input[zm1].velocity;
-        Output[current].velocity = diffuse(a, b, c, d, e, f, g);
+        Output[current].velocity = diffuse(a, b, c, d, e, f, g, nu_dt);
     }
 }

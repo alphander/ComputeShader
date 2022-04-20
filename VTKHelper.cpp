@@ -48,11 +48,11 @@ void vtkAscii(const int x, const int y, const int z, unsigned int size, const Da
     file << "\n";
 
     file << "POINT_DATA " << size << "\n";
-    file << "SCALARS density float\n";
+    file << "SCALARS concentration float\n";
     file << "LOOKUP_TABLE default\n";
 
     for (int i = 0; i < size; i++)
-        file << data[i].density << "\n";
+        file << data[i].concentration << "\n";
 
     file << "VECTORS velocity float\n";
 
@@ -95,10 +95,10 @@ void vtkBinary(const int x, const int y, const int z, unsigned int size, const D
     file << endl;
 
     file << "POINT_DATA " << size << endl;
-    file << "SCALARS density float" << endl;
+    file << "SCALARS concentration float" << endl;
     file << "LOOKUP_TABLE default" << endl;
     for (int i = 0; i < size; i++)
-        file.write(Swap(data[i].density), sizeof(float));
+        file.write(Swap(data[i].concentration), sizeof(float));
     file << endl;
 
     file << "VECTORS velocity float" << endl;

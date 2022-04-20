@@ -11,6 +11,12 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         return;
     }
     
+    if (Input[current].type)
+    {
+        Output[current] = Input[current];
+        return;
+    }
+    
     uint2 w = uint2(1, 0);
     uint xp1 = get(id + w.xyy);
     uint xm1 = get(id - w.xyy);
@@ -26,5 +32,5 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float e = Input[zp1].pressure;
     float f = Input[zm1].pressure;
     
-    Output[current].pressure = (((a + b + c + d + e + f) - Input[current].divergence)) / 6.0;
+    Output[current].pressure = ((a + b + c + d + e + f) - Input[current].divergence) / 6.0;
 }

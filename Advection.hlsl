@@ -4,8 +4,15 @@
 [numthreads(8, 8, 8)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
-    int index = get(id);
-    float3 pos = id - Input[index].velocity * dt;
+    int current = get(id);
+    
+    if (Input[current].type)
+    {
+        Output[current] = Input[current];
+        return;
+    }
+    
+    float3 pos = id - Input[current].velocity * dt;
     float3 fr = frac(pos);
     float3 fl = floor(pos);
     
@@ -19,15 +26,15 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     uint g = get(fl + w.yxx);
     uint h = get(fl + w.xxx);
     {
-        float i = Input[a].density;
-        float j = Input[b].density;
-        float k = Input[c].density;
-        float l = Input[d].density;
-        float m = Input[e].density;
-        float n = Input[f].density;
-        float o = Input[g].density;
-        float p = Input[h].density;
-        Output[index].density = lerps(fr.x, fr.y, fr.z, i, j, k, l, m, n, o, p);
+        float i = Input[a].concentration;
+        float j = Input[b].concentration;
+        float k = Input[c].concentration;
+        float l = Input[d].concentration;
+        float m = Input[e].concentration;
+        float n = Input[f].concentration;
+        float o = Input[g].concentration;
+        float p = Input[h].concentration;
+        Output[current].concentration = lerps(fr.x, fr.y, fr.z, i, j, k, l, m, n, o, p);
     }
     {
         float3 i = Input[a].velocity;
@@ -38,6 +45,6 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         float3 n = Input[f].velocity;
         float3 o = Input[g].velocity;
         float3 p = Input[h].velocity;
-        Output[index].velocity = lerps(fr.x, fr.y, fr.z, i, j, k, l, m, n, o, p);
+        Output[current].velocity = lerps(fr.x, fr.y, fr.z, i, j, k, l, m, n, o, p);
     }
 }
