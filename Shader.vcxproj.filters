@@ -1,37 +1,40 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{ad5eb03f-2cbf-46bc-abe1-1708b1a0ae8d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders\Resources">
-      <UniqueIdentifier>{5d01bff8-e76d-48d7-b41a-7f19cb2fa496}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Shaders\Diffusion">
-      <UniqueIdentifier>{a1f437c0-0ab4-43e7-a5cb-922a3708a8e7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders\Advection">
-      <UniqueIdentifier>{83d85e56-fee3-4dd0-aaef-0aafdae1d94e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders\Correction">
-      <UniqueIdentifier>{9a1cbf60-3909-4195-95f3-8e188e8c0263}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Files\Headers">
       <UniqueIdentifier>{306fe389-71a5-4f78-87d2-72dc47a32014}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\Shaders">
+      <UniqueIdentifier>{ad5eb03f-2cbf-46bc-abe1-1708b1a0ae8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\Shaders\Resources">
+      <UniqueIdentifier>{5d01bff8-e76d-48d7-b41a-7f19cb2fa496}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\Shaders\Diffusion">
+      <UniqueIdentifier>{a1f437c0-0ab4-43e7-a5cb-922a3708a8e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\Shaders\Advection">
+      <UniqueIdentifier>{83d85e56-fee3-4dd0-aaef-0aafdae1d94e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\Shaders\Correction">
+      <UniqueIdentifier>{9a1cbf60-3909-4195-95f3-8e188e8c0263}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>Files</Filter>
     </ClCompile>
-    <ClCompile Include="Helper.cpp">
+    <ClCompile Include="DXUtil.cpp">
       <Filter>Files</Filter>
     </ClCompile>
-    <ClCompile Include="VTKHelper.cpp">
+    <ClCompile Include="VTKUtil.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CellUtil.cpp">
       <Filter>Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -39,33 +42,36 @@
     <ClInclude Include="Resources.h">
       <Filter>Files\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Helper.h">
+    <ClInclude Include="DXUtil.h">
       <Filter>Files\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="VTKHelper.h">
+    <ClInclude Include="VTKUtil.h">
+      <Filter>Files\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="CellUtil.h">
       <Filter>Files\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources.hlsli">
-      <Filter>Shaders\Resources</Filter>
+      <Filter>Files\Shaders\Resources</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Diffusion.hlsl">
-      <Filter>Shaders\Diffusion</Filter>
+      <Filter>Files\Shaders\Diffusion</Filter>
     </FxCompile>
     <FxCompile Include="Advection.hlsl">
-      <Filter>Shaders\Advection</Filter>
+      <Filter>Files\Shaders\Advection</Filter>
     </FxCompile>
     <FxCompile Include="CalculateDivergence.hlsl">
-      <Filter>Shaders\Correction</Filter>
+      <Filter>Files\Shaders\Correction</Filter>
     </FxCompile>
     <FxCompile Include="CalculatePressure.hlsl">
-      <Filter>Shaders\Correction</Filter>
+      <Filter>Files\Shaders\Correction</Filter>
     </FxCompile>
     <FxCompile Include="ClearDivergence.hlsl">
-      <Filter>Shaders\Correction</Filter>
+      <Filter>Files\Shaders\Correction</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

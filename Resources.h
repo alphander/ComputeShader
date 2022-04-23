@@ -31,7 +31,7 @@ struct DynamicConstant
 	int step;
 };
 
-struct Data
+struct Cell
 {
 	int type;
 	DX::XMFLOAT3 velocity;

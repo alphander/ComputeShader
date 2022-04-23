@@ -16,7 +16,7 @@ cbuffer DynamicConstant : register(b1)
     int step;
 };
 
-struct Data
+struct Cell
 {
     int type;
     float3 velocity;
@@ -27,8 +27,8 @@ struct Data
     int padding1;
 };
 
-RWStructuredBuffer<Data> Input : register(u0);
-RWStructuredBuffer<Data> Output : register(u1);
+RWStructuredBuffer<Cell> Input : register(u0);
+RWStructuredBuffer<Cell> Output : register(u1);
 
 uint get(uint3 id)
 {
