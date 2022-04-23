@@ -1,2 +1,2 @@
-# ComputeShader
-A compute shader made using the d3d11 api
+# FluidComputeShader
+A fluid simulation compute shader made using the d3d11 api
