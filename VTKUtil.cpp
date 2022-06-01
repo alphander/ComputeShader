@@ -103,6 +103,12 @@ void vtkBinary(const int x, const int y, const int z, const Cell* data, const ch
         file.write(SwapEndian(data[i].concentration), sizeof(float));
     file << endl;
 
+    file << "SCALARS divergence float" << endl;
+    file << "LOOKUP_TABLE default" << endl;
+    for (int i = 0; i < count; i++)
+        file.write(SwapEndian(data[i].divergence), sizeof(float));
+    file << endl;
+
     file << "VECTORS velocity float" << endl;
     for (int i = 0; i < count; i++)
     {

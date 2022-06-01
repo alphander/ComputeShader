@@ -4,12 +4,12 @@
 #include <future>
 
 //Simulation parameters
-const int simulationSteps = 25000;
+const int simulationSteps = 10000;
 const int width = 64, length = 64, height = 64;
 
-const float nu = 0.16f;
-const float kappa = 0.16f;
-const float dt = 0.0005f;
+const float nu = 6.2f;
+const float kappa = 6.2f;
+const float dt = 0.0001f;
 const float rho = 1.0f;
 const float dx = 1.0f, dy = 1.0f, dz = 1.0f;
 
@@ -19,6 +19,7 @@ const char saveDirectory[] = "VTKs/data";
 
 //GPU parameters
 #define shaderCount 5
+#define stageCount 8
 #define bufferCount 3
 const int threadX = 8, threadY = 8, threadZ = 8;
 
@@ -30,11 +31,26 @@ LPCWSTR shaderFiles[shaderCount] = {
 	L"CalculatePressure.hlsl",
 	L"ClearDivergence.hlsl"
 };
-const int shaderIterations[shaderCount] = {
-	128,
+
+const int stageOrder[stageCount] = {
+	0,
+	2,
+	3,
+	4,
+	1,
+	2,
+	3,
+	4
+};
+
+const int stageIterations[stageCount] = {
+	127,
+	1,
+	127,
 	1,
 	1,
-	128,
+	1,
+	127,
 	1
 };
 
@@ -103,12 +119,13 @@ void runSimulation(int& saves, int& side, int& step)
 	float tx = (float)threadX, ty = (float)threadY, tz = (float)threadZ;
 	int x = ceil(dx / tx), y = ceil(dy / ty), z = ceil(dz / tz);
 
-	for (int i = 0; i < shaderCount; i++)
+	for (int i = 0; i < stageCount; i++)
 	{
-		ID3D11ComputeShader* shader = shaders[i];
+		int shaderIndex = stageOrder[i];
+		ID3D11ComputeShader* shader = shaders[shaderIndex];
 		context->CSSetShader(shader, nullptr, 0);
 
-		int iterations = shaderIterations[i];
+		int iterations = stageIterations[i];
 		for (int j = 0; j < iterations; j++)
 		{
 			UpdateDynamicConstants(context, dynamicConstantBuffer, &dynamicConstant);
@@ -192,7 +209,7 @@ int main()
 	enable();
 
 	cout << "Running Shaders..." << endl;
-	for (int i = 0; i < simulationSteps; i++)
+	for (int i = 0; i <= simulationSteps; i++)
 	{
 		runSimulation(saves, side, step);
 		saveSimulation(saves, side);
