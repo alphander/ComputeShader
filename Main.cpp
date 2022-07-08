@@ -23,6 +23,7 @@ const char saveDirectory[] = "VTKs/data";
 #define bufferCount 3
 const int threadX = 8, threadY = 8, threadZ = 8;
 
+//Shader names
 char entry[] = "CSMain";
 LPCWSTR shaderFiles[shaderCount] = {
 	L"Diffusion.hlsl",
@@ -32,6 +33,7 @@ LPCWSTR shaderFiles[shaderCount] = {
 	L"ClearDivergence.hlsl"
 };
 
+//Shader execution order by index
 const int stageOrder[stageCount] = {
 	0,
 	2,
@@ -43,6 +45,7 @@ const int stageOrder[stageCount] = {
 	4
 };
 
+//Number of times specific shader will run
 const int stageIterations[stageCount] = {
 	127,
 	1,
@@ -54,9 +57,9 @@ const int stageIterations[stageCount] = {
 	1
 };
 
-ID3D11Device* device = nullptr;
-ID3D11DeviceContext* context = nullptr;
-ID3D11ComputeShader* shaders[shaderCount];
+ID3D11Device* device = nullptr; //DirectX device
+ID3D11DeviceContext* context = nullptr; //DirectX device context
+ID3D11ComputeShader* shaders[shaderCount]; //Compute shader array
 
 ID3D11Buffer* constantBuffer = nullptr; //Data that is constant throughout the program.
 ID3D11Buffer* dynamicConstantBuffer = nullptr; //Data that is constant throughout a program cycle.
@@ -65,8 +68,8 @@ ID3D11Buffer* cpuBuffer = nullptr; //The readback buffer. Lives on RAM
 ID3D11Buffer* buffers[bufferCount]; //Rotating buffers allowing us to readback information. Lives on VRAM
 ID3D11UnorderedAccessView* bufferViews[bufferCount]; //Views for buffers
 
-Constant constant;
-DynamicConstant dynamicConstant;
+Constant constant;//Data that is constant throughout the program
+DynamicConstant dynamicConstant;//Data that is constant in within a shader dispath
 
 void enable()
 {
@@ -77,7 +80,7 @@ void enable()
 	//Creating GPU device and context objects. Everything is done with these.
 	CreateDevice(&device, &context);
 
-	//Initializing Cell space on RAM
+	//Initializing Cell space on Memory
 	Cell* cells = createCells(width, height, length);
 	for (int i = 0; i < bufferCount; i++)
 		CreateBuffer(device, &buffers[i], &bufferViews[i], size, count, cells);
@@ -165,7 +168,7 @@ void saveSimulation(int& saves, int& side)
 		cout << "Finished Accessing results..." << endl;
 		cout << "Saving results..." << endl;
 
-		if (!saves == 0) thread.wait();
+		if (saves != 0) thread.wait();
 
 		thread = std::async(std::launch::async, vtkBinary, width, length, height, outputData, saveDirectory, saves);
 

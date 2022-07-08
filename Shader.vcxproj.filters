@@ -11,9 +11,6 @@
     <Filter Include="Files\Shaders">
       <UniqueIdentifier>{ad5eb03f-2cbf-46bc-abe1-1708b1a0ae8d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Files\Shaders\Resources">
-      <UniqueIdentifier>{5d01bff8-e76d-48d7-b41a-7f19cb2fa496}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Files\Shaders\Diffusion">
       <UniqueIdentifier>{a1f437c0-0ab4-43e7-a5cb-922a3708a8e7}</UniqueIdentifier>
     </Filter>
@@ -53,11 +50,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources.hlsli">
-      <Filter>Files\Shaders\Resources</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <FxCompile Include="Diffusion.hlsl">
       <Filter>Files\Shaders\Diffusion</Filter>
     </FxCompile>
@@ -73,5 +65,10 @@
     <FxCompile Include="ClearDivergence.hlsl">
       <Filter>Files\Shaders\Correction</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources.hlsli">
+      <Filter>Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
